@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+option java_package = "RiskFree";
+option java_multiple_files = true;
+option java_outer_classname = "RiskFreeImpl";
+
+
+service RiskFree{
+
+	rpc covidPositions(stream positions) returns (thanks);
+	
+	rpc safeZones(request) returns (stream positions);
+	
+	rpc insideSafeZones(stream positions) returns (stream Safe);
+}
+
+message positions{
+	string position = 1;
+}
+
+message thanks{
+	string thank = 1;
+}
+
+message request{
+}
+
+message Safe{
+	bool safe = 1;
+}

@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+option java_package = "CovidFree";
+option java_multiple_files = true;
+option java_outer_classname = "CovidFreeImpl";
+
+
+service CovidFree{	
+
+	rpc risk_calculator(symptoms) returns (risk);
+	
+	rpc covid_history(userId) returns (hadCovid);
+}
+
+message symptoms{
+	string symptom1 = 1;
+	string symptom2 = 2;
+	string symptom3 = 3;
+}
+
+message risk{
+	int32  riskValue = 1;
+}
+
+message userId{
+	int32 id = 1;
+}
+
+message hadCovid{
+	bool covid = 1;
+}
