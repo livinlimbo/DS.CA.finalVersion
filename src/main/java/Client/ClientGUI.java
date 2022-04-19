@@ -347,7 +347,11 @@ public class ClientGUI {
 	
 					Vaccination.hadVaccination response = VCblockingStub.vaccinationHistory(request);
 					
-					textResponse4.append("reply: \n"+ response.getVaccination() + "\n");
+					if(response.getVaccination() == true) {
+						textResponse4.append("This user got vaccination in the past \n");
+					} else {
+						textResponse4.append("This user did not get vaccination in the past \n");
+					}
 
 				}
 				
@@ -371,7 +375,7 @@ public class ClientGUI {
 					
 					Vaccination.availableDate response = VCblockingStub.seeAvailableDates(request);
 					
-					textResponse4.append("reply: \n"+ response.getAvailable() + "\n");
+					textResponse4.append(response.getAvailable() + "\n");
 					
 				}
 				
@@ -396,8 +400,11 @@ public class ClientGUI {
 					CFblockingStub = CovidFreeGrpc.newBlockingStub(channel);
 	
 					CovidFree.hadCovid response = CFblockingStub.covidHistory(request);
-					
-					textResponse4.append("reply: \n"+ response.getCovid() + "\n");
+					if(response.getCovid() == true) {
+						textResponse4.append("This user had covid in the past \n");
+					} else {
+						textResponse4.append("This user did not have covid in the past \n");
+					}
 				}
 				
 			}
