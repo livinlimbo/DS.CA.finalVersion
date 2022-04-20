@@ -10,13 +10,14 @@ import io.grpc.stub.StreamObserver;
 public class RiskFreeServer {
 public static void main(String[] args) throws IOException, InterruptedException {
 		
+		// service registration for jmdns
 		int port = 50052;
 		String service_type = "_grpc._tcp.local.";
-		String service_name = "GrpcServer";
+		String service_name = "RiskFreeServer";
 		SimpleServiceRegistration ssr = new SimpleServiceRegistration();
 		ssr.run(port, service_type, service_name);
 		
-		try {
+		try { //creating and starting server
 			Server server = ServerBuilder.forPort(port).addService(new RiskFreeService()).build();
 			server.start();
 			System.out.println("\nRisk Free Server Started");
@@ -29,15 +30,17 @@ public static void main(String[] args) throws IOException, InterruptedException 
 		}
 	}
 	
+	//creating service class
 	static class RiskFreeService extends RiskFreeImplBase{
 
-		@Override
+		@Override // creating Covid Position method
 		public StreamObserver<positions> covidPositions(StreamObserver<thanks> responseObserver) {
 			
+			// creating Stream Observer
 			return new StreamObserver<positions>() {
 				
 				@Override
-				public void onNext(positions value) {
+				public void onNext(positions value) { // getting position value from client via getPosition method
 					System.out.println("On server, position received from the client :" + value.getPosition());
 				}
 
@@ -48,45 +51,59 @@ public static void main(String[] args) throws IOException, InterruptedException 
 
 				@Override
 				public void onCompleted() {
+					
+					// creating response builder to build response on server
 					thanks.Builder response = thanks.newBuilder();
 					response.setThank("Thanks for sharing");
+					
+					// building response
 					responseObserver.onNext(response.build());
+					
 					responseObserver.onCompleted();
 				}
 			};
 		}
 
-		@Override
+		@Override // creating Safe Zones method
 		public void safeZones(request request, StreamObserver<positions> responseObserver) {
 			
+			// creating response builder to build response on server
 			positions.Builder response = positions.newBuilder();
 			
+			// method implementation
 			response.setPosition("Dublin 01");
 			responseObserver.onNext(response.build());
 			
+			//setting position via setPosition method
 			response.setPosition("Dublin 02");
 			responseObserver.onNext(response.build());
 			
+			//setting position via setPosition method
 			response.setPosition("Dublin 03");
 			responseObserver.onNext(response.build());
 			
+			// building response
 			responseObserver.onCompleted();
 		}
 
-		@Override
+		@Override // creating Inside Safe Zones method
 		public StreamObserver<positions> insideSafeZones(StreamObserver<Safe> responseObserver) {
 			
+			// creating Stream Observer
 			return new StreamObserver<positions>() {
 
 				@Override
 				public void onNext(positions value) {
-
+					
+					// getting position value from client via getPosition method
 					System.out.println("On server, message received from the client " + value.getPosition());
 					
+					// creating response builder to build response on server
+					Safe.Builder response = Safe.newBuilder();
+					
+					// method implementation
 					String position = value.getPosition();
 					int positionLength = position.length();
-					
-					Safe.Builder response = Safe.newBuilder();
 					
 					if(positionLength %2 == 0) {
 						response.setSafe(true);
@@ -94,6 +111,7 @@ public static void main(String[] args) throws IOException, InterruptedException 
 						response.setSafe(false);
 					}
 					
+					// building response
 					responseObserver.onNext(response.build());
 				}
 
