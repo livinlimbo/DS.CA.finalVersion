@@ -14,13 +14,21 @@ public class CovidFreeServer {
 		int port = 50051;
 		String service_type = "_grpc._tcp.local.";
 		String service_name = "GrpcServer";
-		jmDNS.SimpleServiceRegistration ssr = new jmDNS.SimpleServiceRegistration();
+		SimpleServiceRegistration ssr = new SimpleServiceRegistration();
 		ssr.run(port, service_type, service_name);
 		
-		Server server = ServerBuilder.forPort(port).addService(new CovidFreeService()).build();
-		server.start();
-		System.out.println("\nCovid Free Server Started");
-		server.awaitTermination();
+		try {
+			Server server = ServerBuilder.forPort(port).addService(new CovidFreeService()).build();
+			server.start();
+			System.out.println("\nCovid Free Server Started");
+			server.awaitTermination();
+			
+		} catch (IOException ex) {
+			ex.printStackTrace();
+			
+		} catch (InterruptedException ex) {
+			ex.printStackTrace();
+		}
 	}
 	
 	static class CovidFreeService extends CovidFreeImplBase{

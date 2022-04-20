@@ -19,6 +19,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import CovidFree.CovidFreeGrpc;
+import CovidFree.SimpleServiceDiscovery;
 import RiskFree.RiskFreeGrpc;
 import RiskFree.Safe;
 import RiskFree.positions;
@@ -26,6 +27,7 @@ import RiskFree.thanks;
 import Vaccination.VaccinationGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 
 public class ClientGUI {
@@ -41,7 +43,7 @@ public class ClientGUI {
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
-			//overide the run method of runnable
+			
 			public void run() {
 				try {
 					ClientGUI window = new ClientGUI();
@@ -54,11 +56,6 @@ public class ClientGUI {
 	}
 	
 	public ClientGUI() {
-		initialize();
-	}
-	
-	private void initialize() {
-		
 		frame = new JFrame();
 		frame.setTitle("Client - Covid Tracker");
 		frame.setBounds(100, 100, 1000, 250);
@@ -102,7 +99,7 @@ public class ClientGUI {
 				
 				ServiceInfo serviceInfo;
 				String service_type = "_grpc._tcp.local.";
-				serviceInfo = jmDNS.SimpleServiceDiscovery.run(service_type);
+				serviceInfo = SimpleServiceDiscovery.run(service_type);
 				String host = "localhost";
 				//int port = serviceInfo.getPort();
 				int port = 50051;
@@ -110,19 +107,28 @@ public class ClientGUI {
 				ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
 				
 				CFblockingStub = CovidFreeGrpc.newBlockingStub(channel);
+				
+				try {
+				
+					String fever = textName1.getText();
+					String cough = textName2.getText();
+					String tiredness = textName3.getText();
+	
+					CovidFree.symptoms request = CovidFree.symptoms.newBuilder().setSymptom1(fever).setSymptom2(cough).setSymptom3(tiredness).build();
+	
+					CovidFree.risk response = CFblockingStub.riskCalculator(request);
+	
+					textResponse1.append("Risk: "+ response.getRiskValue() + "\n");
 					
-				String fever = textName1.getText();
-				String cough = textName2.getText();
-				String tiredness = textName3.getText();
-
-				CovidFree.symptoms request = CovidFree.symptoms.newBuilder().setSymptom1(fever).setSymptom2(cough).setSymptom3(tiredness).build();
-
-				CovidFree.risk response = CFblockingStub.riskCalculator(request);
-
-				textResponse1.append("Risk: "+ response.getRiskValue() + "\n");
-
+					if(response.getRiskValue() >= 50) {
+						textResponse1.append("You better stay in your place\n");
+					}
+						
+				} catch (StatusRuntimeException ex) {
+					ex.printStackTrace();
+				}
 			}
-		});//End of setup button
+		});
 		
 		
 		panel_service_1.add(btnSend);
@@ -169,7 +175,7 @@ public class ClientGUI {
 				
 				ServiceInfo serviceInfo;
 				String service_type = "_grpc._tcp.local.";
-				serviceInfo = jmDNS.SimpleServiceDiscovery.run(service_type);
+				serviceInfo = SimpleServiceDiscovery.run(service_type);
 				String host = "localhost";
 				int port = 50052;
 				
@@ -179,76 +185,79 @@ public class ClientGUI {
 						.build();
 				
 				Stub = RiskFreeGrpc.newStub(channel);
-				
-				int index = comboOperation2.getSelectedIndex();
-				
-				if(index==0) {
+				try {
+					int index = comboOperation2.getSelectedIndex();
 					
-					String position1 = textName4.getText();
-					String position2 = textName5.getText();
-					String position3 = textName6.getText();
-					
-					StreamObserver<thanks> responseObserver = new StreamObserver<thanks>() {
-
-						@Override
-						public void onNext(thanks value) {
-							textResponse2.append(value.getThank() + "\n");
-						}
-
-						@Override
-						public void onError(Throwable t) {
-
-						}
-
-						@Override
-						public void onCompleted() {
-							
-						}};
+					if(index==0) {
 						
-						StreamObserver<positions> requestObserver = Stub.covidPositions(responseObserver);
+						String position1 = textName4.getText();
+						String position2 = textName5.getText();
+						String position3 = textName6.getText();
+						
+						StreamObserver<thanks> responseObserver = new StreamObserver<thanks>() {
+	
+							@Override
+							public void onNext(thanks value) {
+								textResponse2.append(value.getThank() + "\n");
+							}
+	
+							@Override
+							public void onError(Throwable t) {
+	
+							}
+	
+							@Override
+							public void onCompleted() {
+								
+							}};
+							
+							StreamObserver<positions> requestObserver = Stub.covidPositions(responseObserver);
+							
+							requestObserver.onNext(positions.newBuilder().setPosition(position1).build());
+							requestObserver.onNext(positions.newBuilder().setPosition(position2).build());
+							requestObserver.onNext(positions.newBuilder().setPosition(position3).build());
+							requestObserver.onCompleted();
+		
+					}
+					
+					if(index==1) {
+						
+						String position1 = textName4.getText();
+						String position2 = textName5.getText();
+						String position3 = textName6.getText();
+						
+						StreamObserver<Safe> responseObserver = new StreamObserver<Safe>() {
+	
+							@Override
+							public void onNext(Safe value) {
+								if(value.getSafe()==true) {
+									textResponse2.append("Position safe\n");	
+								} else {
+									textResponse2.append("Position not safe\n");	
+								}
+							}
+	
+							@Override
+							public void onError(Throwable t) {
+								
+							}
+	
+							@Override
+							public void onCompleted() {
+								textResponse2.append( "Bi directional Streaming Completed \n");
+							}
+						};
+							
+						StreamObserver<positions> requestObserver = Stub.insideSafeZones(responseObserver);
 						
 						requestObserver.onNext(positions.newBuilder().setPosition(position1).build());
 						requestObserver.onNext(positions.newBuilder().setPosition(position2).build());
 						requestObserver.onNext(positions.newBuilder().setPosition(position3).build());
-						requestObserver.onCompleted();
-	
-				}
-				
-				if(index==1) {
-					
-					String position1 = textName4.getText();
-					String position2 = textName5.getText();
-					String position3 = textName6.getText();
-					
-					StreamObserver<Safe> responseObserver = new StreamObserver<Safe>() {
-
-						@Override
-						public void onNext(Safe value) {
-							if(value.getSafe()==true) {
-								textResponse2.append("Position safe\n");	
-							} else {
-								textResponse2.append("Position not safe\n");	
-							}
-						}
-
-						@Override
-						public void onError(Throwable t) {
-							
-						}
-
-						@Override
-						public void onCompleted() {
-							textResponse2.append( "Bi directional Streaming Completed \n");
-						}
-					};
 						
-					StreamObserver<positions> requestObserver = Stub.insideSafeZones(responseObserver);
-					
-					requestObserver.onNext(positions.newBuilder().setPosition(position1).build());
-					requestObserver.onNext(positions.newBuilder().setPosition(position2).build());
-					requestObserver.onNext(positions.newBuilder().setPosition(position3).build());
-					
-					requestObserver.onCompleted();
+						requestObserver.onCompleted();
+					}
+				} catch (StatusRuntimeException ex) {
+					ex.printStackTrace();
 				}
 
 			}
@@ -276,7 +285,7 @@ public class ClientGUI {
 				
 				ServiceInfo serviceInfo;
 				String service_type = "_grpc._tcp.local.";
-				serviceInfo = jmDNS.SimpleServiceDiscovery.run(service_type);
+				serviceInfo = SimpleServiceDiscovery.run(service_type);
 				String host = "localhost";
 				int port = 50052;
 				
@@ -286,14 +295,19 @@ public class ClientGUI {
 						.build();
 				
 				RFblockingStub = RiskFreeGrpc.newBlockingStub(channel);
-
-				RiskFree.request request = RiskFree.request.newBuilder().build();
-
-				Iterator<RiskFree.positions> responses = RFblockingStub.safeZones(request);
 				
-				while (responses.hasNext()) {
-					RiskFree.positions individualResponse = responses.next();
-					textResponse3.append(individualResponse.getPosition() + "\n");
+				try {
+				
+					RiskFree.request request = RiskFree.request.newBuilder().build();
+					
+					Iterator<RiskFree.positions> responses = RFblockingStub.safeZones(request);
+					
+					while (responses.hasNext()) {
+						RiskFree.positions individualResponse = responses.next();
+						textResponse3.append(individualResponse.getPosition() + "\n");
+					}
+				} catch (StatusRuntimeException ex)  {
+					ex.printStackTrace();
 				}
 			}
 		});
@@ -328,7 +342,7 @@ public class ClientGUI {
 					
 					ServiceInfo serviceInfo;
 					String service_type = "_grpc._tcp.local.";
-					serviceInfo = jmDNS.SimpleServiceDiscovery.run(service_type);
+					serviceInfo = SimpleServiceDiscovery.run(service_type);
 					//int port = serviceInfo.getPort();
 					String host = "localhost";
 					int port = 50053;
@@ -340,17 +354,21 @@ public class ClientGUI {
 					
 					VCblockingStub = VaccinationGrpc.newBlockingStub(channel);
 					
-					int name1 = Integer.parseInt(textName7.getText());
+					try {
 					
-					
-					Vaccination.userId request = Vaccination.userId.newBuilder().setId(name1).build();
-	
-					Vaccination.hadVaccination response = VCblockingStub.vaccinationHistory(request);
-					
-					if(response.getVaccination() == true) {
-						textResponse4.append("This user got vaccination in the past \n");
-					} else {
-						textResponse4.append("This user did not get vaccination in the past \n");
+						int name1 = Integer.parseInt(textName7.getText());
+						
+						Vaccination.userId request = Vaccination.userId.newBuilder().setId(name1).build();
+		
+						Vaccination.hadVaccination response = VCblockingStub.vaccinationHistory(request);
+						
+						if(response.getVaccination() == true) {
+							textResponse4.append("This user got vaccination in the past \n");
+						} else {
+							textResponse4.append("This user did not get vaccination in the past \n");
+						}
+					} catch (StatusRuntimeException ex) {
+						ex.printStackTrace();
 					}
 
 				}
@@ -359,7 +377,7 @@ public class ClientGUI {
 					
 					ServiceInfo serviceInfo;
 					String service_type = "_grpc._tcp.local.";
-					serviceInfo = jmDNS.SimpleServiceDiscovery.run(service_type);
+					serviceInfo = SimpleServiceDiscovery.run(service_type);
 					//int port = serviceInfo.getPort();
 					String host = "localhost";
 					int port = 50053;
@@ -371,11 +389,16 @@ public class ClientGUI {
 					
 					VCblockingStub = VaccinationGrpc.newBlockingStub(channel);
 					
-					Vaccination.request request = Vaccination.request.newBuilder().build();
-					
-					Vaccination.availableDate response = VCblockingStub.seeAvailableDates(request);
-					
-					textResponse4.append(response.getAvailable() + "\n");
+					try {
+						Vaccination.request request = Vaccination.request.newBuilder().build();
+						
+						Vaccination.availableDate response = VCblockingStub.seeAvailableDates(request);
+						
+						textResponse4.append(response.getAvailable() + "\n");
+						
+					} catch (StatusRuntimeException ex) {
+						ex.printStackTrace();
+					} 
 					
 				}
 				
@@ -383,7 +406,7 @@ public class ClientGUI {
 					
 					ServiceInfo serviceInfo;
 					String service_type = "_grpc._tcp.local.";
-					serviceInfo = jmDNS.SimpleServiceDiscovery.run(service_type);
+					serviceInfo = SimpleServiceDiscovery.run(service_type);
 					//int port = serviceInfo.getPort();
 					String host = "localhost";
 					int port = 50051;
@@ -393,17 +416,21 @@ public class ClientGUI {
 							.usePlaintext()
 							.build();
 					
-					int name1 = Integer.parseInt(textName7.getText());
-
-					CovidFree.userId request = CovidFree.userId.newBuilder().setId(name1).build();
-					
-					CFblockingStub = CovidFreeGrpc.newBlockingStub(channel);
+					try {		
+						int name1 = Integer.parseInt(textName7.getText());
 	
-					CovidFree.hadCovid response = CFblockingStub.covidHistory(request);
-					if(response.getCovid() == true) {
-						textResponse4.append("This user had covid in the past \n");
-					} else {
-						textResponse4.append("This user did not have covid in the past \n");
+						CovidFree.userId request = CovidFree.userId.newBuilder().setId(name1).build();
+						
+						CFblockingStub = CovidFreeGrpc.newBlockingStub(channel);
+		
+						CovidFree.hadCovid response = CFblockingStub.covidHistory(request);
+						if(response.getCovid() == true) {
+							textResponse4.append("This user had covid in the past \n");
+						} else {
+							textResponse4.append("This user did not have covid in the past \n");
+						}
+					} catch (StatusRuntimeException ex) {
+						ex.printStackTrace();
 					}
 				}
 				
@@ -417,4 +444,5 @@ public class ClientGUI {
 		JScrollPane scrollPane4 = new JScrollPane(textResponse4);
 		panel_service_3.add(scrollPane4);
 	}
+		
 }

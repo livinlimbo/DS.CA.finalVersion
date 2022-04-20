@@ -1,4 +1,4 @@
-package jmDNS;
+package CovidFree;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -93,7 +93,7 @@ public class SimpleServiceDiscovery {
 
 			
 			//sleep for 10 seconds
-			//Thread.sleep(10000);
+			Thread.sleep(10000);
 			
 			serviceInfo = msl.getServiceInfo();
 			port = msl.getPort();
@@ -108,13 +108,10 @@ public class SimpleServiceDiscovery {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} 
-		/*
-		catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		*/
 		return serviceInfo;
 
 	}

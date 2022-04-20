@@ -1,4 +1,4 @@
-package jmDNS;
+package CovidFree;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -40,7 +40,7 @@ public class SimpleServiceRegistration {
 			System.out.printf("registering service with type: %s and name: %s on port %d ", service_type, service_name, service_port);
 			
 			//sleep for 10 seconds
-			//Thread.sleep(10000);
+			Thread.sleep(10000);
 			System.out.println("\nService Registered");
 			//unregister the services
 			//jmdns.unregisterAllServices();   //you could also unregister a single service
@@ -52,13 +52,11 @@ public class SimpleServiceRegistration {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} 
-		/*
-		catch (InterruptedException e) {
+		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		*/
+
 	}
 
 }
