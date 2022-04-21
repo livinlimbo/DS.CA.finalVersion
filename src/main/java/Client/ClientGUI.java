@@ -331,7 +331,7 @@ public class ClientGUI {
 		
 
 		//creating button and adding on the panel
-		JButton btnSend3 = new JButton("Check Safe Zones");
+		JButton btnSend3 = new JButton("Check Dangerous Zones");
 		btnSend3.addActionListener(new ActionListener() {
 			
 			public void actionPerformed(ActionEvent e) {
@@ -365,7 +365,11 @@ public class ClientGUI {
 						
 						// getting position value from server and appending them in the text area on the GUI
 						RiskFree.positions individualResponse = responses.next();
-						textResponse3.append(individualResponse.getPosition() + "\n");
+						//if(individualResponse.getPosition().length() % 2 == 0) {
+							textResponse3.append(individualResponse.getPosition() + "\n");
+						//} else {
+							//textResponse3.append(individualResponse.getPosition() + " is not safe\n");
+						//}
 					}
 					
 				// catching Status Runtime Exception
@@ -444,7 +448,6 @@ public class ClientGUI {
 					} catch (StatusRuntimeException ex) {
 						ex.printStackTrace();
 					}
-
 				}
 				
 				if(index==1) {
@@ -479,8 +482,7 @@ public class ClientGUI {
 					// catching Status Runtime Exception
 					} catch (StatusRuntimeException ex) {
 						ex.printStackTrace();
-					} 
-					
+					}					
 				}
 				
 				if(index==2) {
@@ -536,6 +538,5 @@ public class ClientGUI {
 		textResponse4.setWrapStyleWord(true);		
 		JScrollPane scrollPane4 = new JScrollPane(textResponse4);
 		panel_service_3.add(scrollPane4);
-	}
-		
+	}	
 }

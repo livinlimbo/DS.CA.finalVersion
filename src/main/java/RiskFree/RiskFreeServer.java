@@ -32,7 +32,10 @@ public static void main(String[] args) throws IOException, InterruptedException 
 	
 	//creating service class
 	static class RiskFreeService extends RiskFreeImplBase{
-
+		
+		String [] dangerousPositions = new String[3];
+		int counter = 0;
+		
 		@Override // creating Covid Position method
 		public StreamObserver<positions> covidPositions(StreamObserver<thanks> responseObserver) {
 			
@@ -42,6 +45,8 @@ public static void main(String[] args) throws IOException, InterruptedException 
 				@Override
 				public void onNext(positions value) { // getting position value from client via getPosition method
 					System.out.println("On server, position received from the client :" + value.getPosition());
+					dangerousPositions[counter] = value.getPosition();
+					counter++;
 				}
 
 				@Override
@@ -71,15 +76,15 @@ public static void main(String[] args) throws IOException, InterruptedException 
 			positions.Builder response = positions.newBuilder();
 			
 			// method implementation
-			response.setPosition("Dublin 01");
+			response.setPosition(dangerousPositions[0]);
 			responseObserver.onNext(response.build());
 			
 			//setting position via setPosition method
-			response.setPosition("Dublin 02");
+			response.setPosition(dangerousPositions[1]);
 			responseObserver.onNext(response.build());
 			
 			//setting position via setPosition method
-			response.setPosition("Dublin 03");
+			response.setPosition(dangerousPositions[2]);
 			responseObserver.onNext(response.build());
 			
 			// building response
@@ -103,12 +108,11 @@ public static void main(String[] args) throws IOException, InterruptedException 
 					
 					// method implementation
 					String position = value.getPosition();
-					int positionLength = position.length();
-					
-					if(positionLength %2 == 0) {
-						response.setSafe(true);
-					} else {
+						
+					if(position.equalsIgnoreCase(dangerousPositions[0]) || position.equalsIgnoreCase(dangerousPositions[1]) || position.equalsIgnoreCase(dangerousPositions[2]) ){
 						response.setSafe(false);
+					} else {
+						response.setSafe(true);
 					}
 					
 					// building response
